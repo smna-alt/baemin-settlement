@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>정산내역 조회 가이드</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+  font-size: 13px;
+  color: #222;
+  background: #fff;
+  height: 100vh;
+  overflow: hidden;
+}
+.layout {
+  display: flex;
+  height: 100vh;
+}
+
+/* 왼쪽 목록 */
+.side-list {
+  width: 200px;
+  flex-shrink: 0;
+  border-right: 1px solid #E4E6E8;
+  overflow-y: auto;
+  background: #F8F9FA;
+}
+.side-cat-label {
+  padding: 8px 14px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #AAB0BA;
+  letter-spacing: 0.4px;
+  background: #F0F2F5;
+  border-bottom: 1px solid #E4E6E8;
+  border-top: 1px solid #E4E6E8;
+  margin-top: 4px;
+}
+.side-cat-label:first-child { margin-top: 0; border-top: none; }
+.side-item {
+  padding: 9px 14px;
+  border-bottom: 1px solid #ECEDF0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 500;
+  color: #444;
+  line-height: 1.4;
+}
+.side-item:hover { background: #ECEDF0; }
+.side-item.active {
+  background: #EEF3FC;
+  color: #1470B4;
+  font-weight: 700;
+  border-left: 2px solid #1470B4;
+  padding-left: 12px;
+}
+.side-item .arr { font-size: 10px; color: #CCC; flex-shrink: 0; margin-left: 4px; }
+.side-item.active .arr { color: #1470B4; }
+
+/* 오른쪽 상세 */
+.side-detail {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 24px 40px;
+}
+.sd-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 10px;
+}
+.sd-desc {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.75;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #F0F2F5;
+}
+.sd-sub-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #AAB0BA;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.sd-sub-item {
+  padding: 10px 0;
+  border-bottom: 1px solid #F0F2F5;
+}
+.sd-sub-item:last-child { border-bottom: none; }
+.sd-sub-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 3px;
+}
+.sd-sub-desc {
+  font-size: 12px;
+  color: #888;
+  line-height: 1.55;
+}
+.no-sub {
+  font-size: 13px;
+  color: #AAB0BA;
+  font-style: italic;
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- 왼쪽 목록 -->
+  <div class="side-list">
+    <div class="side-cat-label">(A) 주문중개</div>
+    <div class="side-item active" onclick="show('jm',this)">주문금액 <span class="arr">›</span></div>
+    <div class="side-item" onclick="show('cl',this)">중개이용료 <span class="arr">›</span></div>
+    <div class="side-item" onclick="show('hl',this)">고객할인비용 <span class="arr">›</span></div>
+    <div class="side-item" onclick="show('sm',this)">소액주문비 <span class="arr">›</span></div>
+    <div class="side-item" onclick="show('bf',this)">부분환불금액 <span class="arr">›</span></div>
+    <div class="side-cat-label">(B) 배달</div>
+    <div class="side-item" onclick="show('db',this)">배달비 <span class="arr">›</span></div>
+    <div class="side-item" onclick="show('dt',this)">배달팁 할인비용 <span class="arr">›</span></div>
+    <div class="side-item" onclick="show('gd',this)">가게배달팁 <span class="arr">›</span></div>
+    <div class="side-cat-label">(C) 그 외</div>
+    <div class="side-item" onclick="show('rp',this)">결제정산수수료 <span class="arr">›</span></div>
+    <div class="side-item" onclick="show('mc',this)">만나서결제금액 <span class="arr">›</span></div>
+    <div class="side-item" onclick="show('cup',this)">일회용컵보증금액 <span class="arr">›</span></div>
+    <div class="side-cat-label">(D) 부가세</div>
+    <div class="side-item" onclick="show('vat',this)">부가세 <span class="arr">›</span></div>
+    <div class="side-cat-label">기타</div>
+    <div class="side-item" onclick="show('ad',this)">광고비 지원 <span class="arr">›</span></div>
+    <div class="side-item" onclick="show('aj',this)">조정금액 <span class="arr">›</span></div>
+    <div class="side-item" onclick="show('cr',this)">보정금액 <span class="arr">›</span></div>
+    <div class="side-item" onclick="show('ck',this)">우리가게클릭 <span class="arr">›</span></div>
+  </div>
+
+  <!-- 오른쪽 상세 -->
+  <div class="side-detail" id="detail">
+    <div class="sd-name" id="sd-name">주문금액</div>
+    <div class="sd-desc" id="sd-desc">고객이 주문한 음식값으로, 이 금액을 기준으로 중개이용료 등이 계산됩니다.</div>
+    <div class="sd-sub-title" id="sd-sub-title">세부 항목</div>
+    <div id="sd-sub-list"></div>
+  </div>
+
+</div>
+
+<script>
+const data = {
+  jm: {
+    name: '주문금액',
+    desc: '고객이 주문한 음식값으로, 이 금액을 기준으로 중개이용료 등이 계산됩니다.',
+    subs: [
+      ['바로결제 주문금액', '배달의민족 앱에서 바로결제로 주문된 금액'],
+      ['만나서결제 주문금액 (배달의민족)', '배달의민족 서비스에서 만나서결제로 주문된 금액'],
+      ['만나서결제 주문금액 (픽업)', '픽업 서비스에서 만나서결제로 주문된 금액'],
+      ['배민오더 (배민상품권)', '배민오더에서 배민상품권으로 결제된 금액'],
+      ['배민오더 (포인트)', '배민오더에서 포인트로 결제된 금액'],
+    ]
+  },
+  cl: {
+    name: '중개이용료',
+    desc: '배민배달·가게배달·픽업 이용 시 발생하는 수수료로, 주문금액에서 고객할인비용을 뺀 금액에 서비스별 수수료율을 곱해 계산됩니다.',
+    subs: [
+      ['알뜰배달 중개이용료', '알뜰배달 주문에 대한 중개이용료'],
+      ['한집배달 중개이용료', '한집배달 주문에 대한 중개이용료'],
+      ['오픈서비스 중개이용료', '오픈서비스 이용 시 발생하는 중개이용료'],
+      ['가게배달 중개이용료', '가게배달 이용 시 발생하는 중개이용료'],
+      ['1인분 중개이용료', '1인분 서비스 이용 시 발생하는 중개이용료'],
+      ['픽업 중개이용료', '픽업 서비스 이용 시 발생하는 중개이용료'],
+    ]
+  },
+  hl: {
+    name: '고객할인비용',
+    desc: '파트너님이 고객에게 제공한 쿠폰 및 할인금액(혜택쿠폰, 주문금액 즉시할인 등)을 더한 금액입니다.',
+    subs: [
+      ['파트너부담 쿠폰', '파트너님이 직접 설정한 할인 쿠폰 금액'],
+      ['임직원할인', '배민 임직원 대상 할인 금액 (파트너 부담분)'],
+      ['메뉴할인', '특정 메뉴에 설정된 할인 금액'],
+      ['메뉴할인 지원', '메뉴할인 중 배민이 지원하는 금액'],
+      ['가게주문금액할인', '알뜰배달·한집배달 이용 가게에 적용되는 주문금액 할인'],
+      ['주문금액 즉시할인', '주문 시점에 즉시 적용된 할인 금액'],
+      ['주문금액 즉시할인 지원', '즉시할인 중 배민이 지원하는 금액'],
+    ]
+  },
+  sm: {
+    name: '소액주문비',
+    desc: '최소주문금액 미만의 소액주문 발생 시 파트너님이 부담하는 비용입니다. 주문금액에서 차감됩니다.',
+    subs: []
+  },
+  bf: {
+    name: '부분환불금액',
+    desc: '주문 건에 대해 일부 환불이 발생한 경우 환불된 금액이 매출에서 차감됩니다.',
+    subs: []
+  },
+  db: {
+    name: '배달비',
+    desc: '배민배달 서비스 이용에 따른 배달 비용입니다. 서비스 종류에 따라 배달비 금액이 다르게 적용됩니다.',
+    subs: [
+      ['한집배달 배달비', '한집배달 주문 건에 대한 배달비'],
+      ['알뜰배달 배달비', '알뜰배달 주문 건에 대한 배달비'],
+      ['한집배달 배달비 할인', '한집배달 배달비 일부를 배민에서 할인해드리는 금액'],
+      ['알뜰배달 배달비 할인', '알뜰배달 배달비 일부를 배민에서 할인해드리는 금액'],
+      ['배달비 지원', '정부 배달비 지원 사업에 따른 지원 금액'],
+    ]
+  },
+  dt: {
+    name: '배달팁 할인비용',
+    desc: '파트너님이 설정한 통합 할인 금액에서 고객이 부담하는 배달팁만큼 적용한 금액입니다. (2025.7.22 이전 주문에 적용)',
+    subs: [
+      ['한집배달 배달팁 즉시할인', '한집배달 주문의 배달팁 즉시할인 금액'],
+      ['알뜰배달 배달팁 즉시할인', '알뜰배달 주문의 배달팁 즉시할인 금액'],
+      ['배달팁 즉시할인 지원', '배달팁 즉시할인 중 배민이 지원하는 금액'],
+    ]
+  },
+  gd: {
+    name: '가게배달팁',
+    desc: '고객이 부담하는 가게배달팁으로, 배민이 전액 지원합니다. 입금금액에 포함됩니다.',
+    subs: [
+      ['바로결제 배달팁', '가게배달 바로결제 주문의 고객 부담 배달팁'],
+      ['만나서결제 배달팁', '가게배달 만나서결제 주문의 고객 부담 배달팁'],
+    ]
+  },
+  rp: {
+    name: '결제정산수수료',
+    desc: '카드결제 정산 시 발생하는 수수료입니다. 정률 또는 정액으로 부과되며, 우대수수료 적용 시 기본 수수료보다 낮은 수수료율이 적용됩니다.',
+    subs: [
+      ['기본수수료 (정률)', '주문금액의 일정 비율로 부과되는 수수료'],
+      ['기본수수료 (정액)', '건당 일정 금액으로 부과되는 수수료'],
+      ['우대수수료', '소규모 가맹점 우대 정책에 따라 적용되는 낮은 수수료'],
+    ]
+  },
+  mc: {
+    name: '만나서결제금액',
+    desc: '고객에게 현금·카드로 직접 받은 금액으로 배민 정산금액에서 제외됩니다. 파트너님이 직접 수령하는 금액입니다.',
+    subs: []
+  },
+  cup: {
+    name: '일회용컵보증금액',
+    desc: '2022년 12월 2일부터 시행된 일회용컵 보증금 제도에 따라 발생한 금액입니다. 고객이 컵 반환 시 환불됩니다.',
+    subs: []
+  },
+  vat: {
+    name: '부가세',
+    desc: '정산 항목 중 부가세가 포함된 금액입니다. 세금계산서 발행 대상 항목의 부가세가 별도 표시됩니다.',
+    subs: [
+      ['중개이용료 부가세', '중개이용료에 부과된 부가세 (10%)'],
+      ['배달비 부가세', '배달비에 부과된 부가세 (10%)'],
+      ['결제정산수수료 부가세', '결제정산수수료에 부과된 부가세 (10%)'],
+    ]
+  },
+  ad: {
+    name: '광고비 지원',
+    desc: '광고 프로모션에 따라 광고비 일부를 지원해드리는 금액입니다. 프로모션 조건에 따라 지원 금액이 달라집니다.',
+    subs: [
+      ['울트라콜 페이백', '울트라콜 광고비 일부를 환급해드리는 금액'],
+      ['광고 프로모션', '특정 광고 프로모션에 따른 지원 금액'],
+      ['신규 온라인 입점 지원', '신규 입점 파트너 대상 광고비 지원'],
+      ['통합할인 프로모션 지원', '통합할인 프로모션 참여에 따른 지원 금액'],
+    ]
+  },
+  aj: {
+    name: '조정금액',
+    desc: '과거 발생한 정산 금액을 조정하는 항목입니다. 이전 정산에서 누락되었거나 잘못 처리된 금액을 보정합니다.',
+    subs: [
+      ['만나서결제 미수금', '만나서결제 주문에서 발생한 미수금 조정'],
+      ['광고 미수금', '광고비 미납 금액 조정'],
+      ['우대수수료 환급', '우대수수료 적용 기준 충족으로 인한 환급 금액'],
+      ['지급제외', '정산에서 제외된 금액'],
+      ['지급이월', '다음 정산 주기로 이월된 금액'],
+    ]
+  },
+  cr: {
+    name: '보정금액',
+    desc: '정산 오류나 기타 사유로 인해 수동으로 보정한 금액입니다. 운영팀이 직접 처리하는 예외적인 항목입니다.',
+    subs: []
+  },
+  ck: {
+    name: '우리가게클릭',
+    desc: '우리가게클릭 광고 서비스 이용에 따른 광고비입니다. 클릭수 기반으로 광고비가 산정됩니다.',
+    subs: [
+      ['우리가게클릭 광고비', '클릭수에 따라 부과되는 광고 이용 비용'],
+      ['우리가게클릭 쿠폰', '우리가게클릭 광고비 쿠폰 할인 금액'],
+    ]
+  },
+};
+
+function show(key, el) {
+  const d = data[key];
+  document.getElementById('sd-name').textContent = d.name;
+  document.getElementById('sd-desc').textContent = d.desc;
+
+  const subTitle = document.getElementById('sd-sub-title');
+  const subList = document.getElementById('sd-sub-list');
+
+  if (d.subs.length > 0) {
+    subTitle.style.display = '';
+    subList.innerHTML = d.subs.map(([n, desc]) =>
+      `<div class="sd-sub-item"><div class="sd-sub-name">${n}</div><div class="sd-sub-desc">${desc}</div></div>`
+    ).join('');
+  } else {
+    subTitle.style.display = 'none';
+    subList.innerHTML = '<div class="no-sub">별도 세부 항목 없음</div>';
+  }
+
+  document.querySelectorAll('.side-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+
+  document.getElementById('detail').scrollTop = 0;
+}
+
+// 초기 로드
+show('jm', document.querySelector('.side-item'));
+</script>
+</body>
+</html>
